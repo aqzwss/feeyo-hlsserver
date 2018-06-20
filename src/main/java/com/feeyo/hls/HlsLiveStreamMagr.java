@@ -38,10 +38,10 @@ public class HlsLiveStreamMagr {
     private static ScheduledExecutorService scheduledThreadPoolExecutor = Executors.newScheduledThreadPool(3);
 
     // alias -> streamId 
-	private static Map<String, Long> aliasToStreamIdCache = new ConcurrentHashMap<String, Long>();
+	private Map<String, Long> aliasToStreamIdCache = new ConcurrentHashMap<String, Long>();
     
     // streamId -> live stream
-    private static Map<Long, HlsLiveStream> streamIdToLiveStreamCache = new ConcurrentHashMap<Long, HlsLiveStream>();
+    private Map<Long, HlsLiveStream> streamIdToLiveStreamCache = new ConcurrentHashMap<Long, HlsLiveStream>();
     
     
     private HlsLiveStreamMagr() {}

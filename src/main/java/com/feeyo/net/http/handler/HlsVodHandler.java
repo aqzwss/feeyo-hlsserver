@@ -8,8 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -25,11 +26,13 @@ import org.slf4j.LoggerFactory;
 
 import com.aliyun.oss.model.ObjectMetadata;
 import com.feeyo.audio.codec.faac.FaacUtils;
+import com.feeyo.hls.HlsLiveStream;
 import com.feeyo.hls.HlsLiveStreamMagr;
 import com.feeyo.hls.ts.segmenter.AacTranscodingTsSegmenter;
 import com.feeyo.net.http.util.HttpUtil;
 import com.feeyo.net.http.util.OssUtil;
 import com.feeyo.net.udp.packet.V5PacketType;
+import com.feeyo.util.DefaultThreadFactory;
 
 /**
  *  vod stream request handler
@@ -45,7 +48,8 @@ public class HlsVodHandler implements IRequestHandler {
 	private static final String regex = "^/hls/vod/\\w+/\\w+\\.(m3u8|ts)$";
     private static final int VOD_CACHE_TIME = 1000 * 60;
 
-    private ExecutorService executor = Executors.newFixedThreadPool(10);
+    private ThreadPoolExecutor executor =  new ThreadPoolExecutor(4, 10, 6 * 1000L, 
+    		TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(500), new DefaultThreadFactory("HlsVod-", true));
     
     private static Map<String, byte[]> cachedVodTsFiles = new ConcurrentHashMap<String, byte[]>();
     private static final HashSet<String> m3u8WaiteSet = new HashSet<>();
@@ -165,13 +169,16 @@ public class HlsVodHandler implements IRequestHandler {
         
         final AacTranscodingTsSegmenter tsSegmenter = new AacTranscodingTsSegmenter();
         final int tsNum = tsSegmenter.calcTsNum((int)objectMetadata.getContentLength());
+        
+        HlsLiveStream stream = HlsLiveStreamMagr.INSTANCE().getHlsLiveStreamById(streamId);
+        float sampleRate = stream != null ? stream.getSampleRate() : 8000F;
 
         // 提取OSS 语音文件，生成TS文件， 然后再上传至 OSS
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         StringBuilder m3u8 = new StringBuilder();
         m3u8.append("#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:"+ AacTranscodingTsSegmenter.TS_DURATION +"\n#EXT-X-MEDIA-SEQUENCE:"+ 1);
 		for (int i = 0; i < tsNum; i++) {
-			m3u8.append("\n#EXTINF:" + tsSegmenter.getTsSegTime() + ",\n" + reqFileName.replace(".m3u8", "") + "_" + i + ".ts");
+			m3u8.append("\n#EXTINF:" + tsSegmenter.calcTsSegTime(sampleRate) + ",\n" + reqFileName.replace(".m3u8", "") + "_" + i + ".ts");
 		}
         m3u8.append("\n#EXT-X-ENDLIST");
         ossOperation.uploadObject(m3u8.toString().getBytes(), reqFileName, streamId);

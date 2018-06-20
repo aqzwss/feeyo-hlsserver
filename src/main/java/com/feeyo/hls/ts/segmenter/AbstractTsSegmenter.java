@@ -71,7 +71,12 @@ public abstract class AbstractTsSegmenter {
         int rawFrameLen = (length >> 11) + ((length & 0x7FF) == 0 ? 0 : 1);
         return rawFrameLen / frameNum + (rawFrameLen % frameNum == 0 ? 0 : 1);
     }
-	
+    
+    public float calcTsSegTime(float sampleRate) {
+    	int rawFramenum = (TS_DURATION * (int)sampleRate) >> 10;
+    	return 1.0F * (rawFramenum << 10) / sampleRate;
+    }
+    
 	// 初始化
 	public void initialize(float sampleRate, int sampleSizeInBits, int channels, int fps) {
 		
