@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang.ArrayUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ import com.feeyo.hls.ts.segmenter.AbstractTsSegmenter;
 import com.feeyo.hls.ts.segmenter.H264TranscodingTsSegmenter;
 import com.feeyo.hls.ts.segmenter.H264TsSegmenter;
 import com.feeyo.net.udp.packet.V5PacketType;
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -146,7 +146,7 @@ public class HlsLiveStream {
     // length= 3 ~ 5
     public long[] fetchTsIndexs() {
     	// 
-    	Set<Long> indexSET = tsSegments.keySet();
+    	Set<Long> indexSET = ImmutableSet.copyOf(tsSegments.keySet());
     	if ( indexSET.size() < 3 ) {
     		return null;
     	}	
@@ -349,5 +349,5 @@ public class HlsLiveStream {
 	        }
     	}
     }
-
+	
 }
