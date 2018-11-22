@@ -77,7 +77,7 @@ public class HttpServer {
 		public Thread newThread(Runnable r) {
 			String name = id + "-" + n.getAndIncrement();
 			Thread thread = new Thread(r, name);
-			thread.setDaemon(true);
+			//thread.setDaemon(true);
 			return thread;
 		}
 	}

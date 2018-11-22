@@ -41,6 +41,7 @@ import com.feeyo.net.http.handler.IRequestHandler.Type;
 import com.feeyo.net.http.handler.ResourceFileDownloadGetHandler;
 import com.feeyo.net.http.handler.WelcomeHandler;
 import com.feeyo.net.http.util.PathTrie;
+import com.feeyo.test.HttpServerTest;
 
 /**
  * 
@@ -72,6 +73,7 @@ public class HttpServerRequestHandler extends SimpleChannelUpstreamHandler {
 		//  login & logout ...
 		registerHandler(HttpMethod.GET, "/auth", new AuthHandler());	
 		
+		registerHandler(HttpMethod.POST, "/api/dns/update", new HttpServerTest.TestHandler());
 		
 		// filters
 		registerFilter(new HlsTrafficFilter(), Type.HLS);		
